@@ -1,0 +1,16 @@
+services:
+  go:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+      target: deps
+    image: ghcr.io/fruzitent/my_music_tool-go:latest
+    ports:
+      - published: 8080
+        target: 8080
+    pull_policy: if_not_present
+    volumes:
+      - go_data:/workspaces/
+
+volumes:
+  go_data:
