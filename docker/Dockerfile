@@ -1,16 +1,30 @@
 # syntax=docker/dockerfile:1.6-labs
+# @help: https://docs.docker.com/reference/dockerfile
 
 ARG WORKDIR="/workspaces/my_music_tool-go/"
 
-FROM docker.io/library/golang:1.22-alpine3.19 as deps
+FROM docker.io/library/golang:1.22-alpine3.19 as base
 
 ARG WORKDIR
 WORKDIR ${WORKDIR}
 
-COPY "./go.mod"  "${WORKDIR}/"
-COPY "./go.sum"  "${WORKDIR}/"
+# hadolint ignore=DL3018
+RUN --mount=type=cache,target=/var/cache/apk/,sharing=locked --mount=type=cache,target=/var/lib/apk/,sharing=locked <<EOF
+    apk --update-cache add \
+        "git" \
+        "neovim" \
+        ;
+EOF
 
-RUN --mount=type=cache,target=/root/go/,sharing=locked <<EOF
+FROM base as deps
+
+ARG WORKDIR
+WORKDIR ${WORKDIR}
+
+COPY "./go.mod" "${WORKDIR}/"
+COPY "./go.sum" "${WORKDIR}/"
+
+RUN --mount=type=cache,target=/go/,sharing=locked <<EOF
     go mod download
 EOF
 
@@ -29,6 +43,13 @@ COPY "./main.go" "${WORKDIR}/"
 RUN <<EOF
     go build
 EOF
+
+# hadolint ignore=DL3006
+FROM scratch as artifact
+
+ARG WORKDIR
+
+COPY --from=builder "${WORKDIR}/org.fruzitent.mymusictool" "/"
 
 FROM docker.io/library/alpine:3.19 as runner
 
