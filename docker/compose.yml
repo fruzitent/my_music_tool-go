@@ -1,3 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+# @help: https://docs.docker.com/compose/compose-file
+
+name: my_music_tool
+
 services:
   go:
     build:
@@ -12,8 +17,13 @@ services:
       - published: 8080
         target: 8080
     pull_policy: if_not_present
+    restart: always
     volumes:
-      - go_data:/workspaces/
+      - type: volume
+        source: go_data
+        target: /workspaces/
+        volume:
+          nocopy: true
 
 volumes:
   go_data:
