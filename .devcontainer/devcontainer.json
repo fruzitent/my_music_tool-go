@@ -1,0 +1,5 @@
+{
+  "dockerComposeFile": ["../docker/compose.yml"],
+  "service": "go",
+  "workspaceFolder": "/workspaces"
+}
